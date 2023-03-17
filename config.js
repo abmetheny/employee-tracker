@@ -12,7 +12,7 @@ const db = process.env.JAWSDB_URL || mysql.createConnection(
         password: process.env.DB_PW,
         database: process.env.DB_NAME
     },
-    console.log(`Connected to the courses_db database.`)
+    console.log(`Connected to the tracker_db database.`)
 );
 
 db.connect((err) => {

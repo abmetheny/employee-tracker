@@ -1,5 +1,4 @@
 const inquirer = require('inquirer');
-const mysql = require('mysql2');
 const cTable = require('console.table');
 const db = require('./config');
 
@@ -87,25 +86,39 @@ const updateEmpQuestions = [
 
 // Functions to handle each response type
 function viewDept() {
-    //SELECT * db table
-    console.log('Viewing all departments.');
-    init();
+    db.query('SELECT * FROM department', (err, result) => {
+        if (err) {
+            console.log(err);
+        }
+        console.table(result);
+        console.log('Viewing all departments.');
+        init();
+    });
 };
 
 function viewRole() {
-    //SELECT * db table
-    console.log('Viewing all roles.');
-    init();
+    db.query('SELECT r.id, r.title, d.name, r.salary FROM role AS r JOIN department AS d ON r.department_id = d.id;', (err, result) => {
+        if (err) {
+            console.log(err);
+        }
+        console.table(result);
+        console.log('Viewing all roles.');
+        init();
+    });
 };
 
 function viewEmp() {
-    //SELECT * db table
-    console.log('Viewing all employees.');
-    init();
+    db.query('SELECT e.id, e.first_name, e.last_name, r.title, d.name AS department, r.salary, CONCAT (m.first_name, " ", m.last_name) AS manager FROM employee AS e LEFT JOIN employee AS m ON e.manager_id = m.id JOIN role AS r ON e.role_id = r.id JOIN department AS d ON r.department_id = d.id;', (err, result) => {
+        if (err) {
+            console.log(err);
+        };
+        console.table(result);
+        console.log('Viewing all employees.');
+        init();
+    });
 };
 
 function addDept() {
-
     inquirer
         .prompt(addDeptQuestions)
         .then((answers) => {
@@ -150,7 +163,6 @@ function init() {
     inquirer
         .prompt(initQuestion)
         .then((answers) => {
-            console.table(answers)
             answers = answers.allChoices;
             console.log(answers)
             if (answers === 'View All Departments') {
@@ -159,7 +171,7 @@ function init() {
             if (answers === 'View All Roles') {
                 viewRole();
             };
-            if (answers === ' View All Employees') {
+            if (answers === 'View All Employees') {
                 viewEmp();
             };
             if (answers === 'Add a Department') {
