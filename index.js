@@ -1,34 +1,25 @@
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
+const cTable = require('console.table');
+const db = require('./config');
 
-// Connect to sql database
-const db = mysql.createConnection(
-    {
-      host: 'localhost',
-      // MySQL username,
-      user: 'root',
-      // MySQL password
-      password: '',
-      database: 'tracker_db'
-    },
-    console.log(`Connected to the courses_db database.`)
-  );
 
 // Inquirer questions
-const initQuestion = 
+const initQuestion = [
     {
         type: 'list',
         name: 'allChoices',
         message: 'What would you like to do?',
         choices: ['View All Departments', 'View All Roles', 'View All Employees', 'Add a Department', 'Add a Role', 'Add an Employee', 'Update an Employee Role']
-    };
+    },
+];
 
-const addDeptQuestions = 
-    {
-        type: 'input',
-        name: 'newDept',
-        message: 'What is the name of the department?'
-    }
+const addDeptQuestions =
+{
+    type: 'input',
+    name: 'newDept',
+    message: 'What is the name of the department?'
+}
 
 const addRoleQuestions = [
     {
@@ -95,25 +86,26 @@ const updateEmpQuestions = [
 ];
 
 // Functions to handle each response type
-function viewDept () {
+function viewDept() {
     //SELECT * db table
     console.log('Viewing all departments.');
     init();
 };
 
-function viewRole () {
+function viewRole() {
     //SELECT * db table
     console.log('Viewing all roles.');
     init();
 };
 
-function viewEmp () {
+function viewEmp() {
     //SELECT * db table
     console.log('Viewing all employees.');
     init();
 };
 
-function addDept () {
+function addDept() {
+
     inquirer
         .prompt(addDeptQuestions)
         .then((answers) => {
@@ -123,7 +115,7 @@ function addDept () {
     init();
 };
 
-function addRole () {
+function addRole() {
     inquirer
         .prompt(addRoleQuestions)
         .then((answers) => {
@@ -133,7 +125,7 @@ function addRole () {
     init();
 };
 
-function addEmp () {
+function addEmp() {
     inquirer
         .prompt(addEmpQuestions)
         .then((answers) => {
@@ -143,7 +135,7 @@ function addEmp () {
     init();
 };
 
-function updateEmp () {
+function updateEmp() {
     inquirer
         .prompt(updateEmpQuestions)
         .then((answers) => {
@@ -158,7 +150,9 @@ function init() {
     inquirer
         .prompt(initQuestion)
         .then((answers) => {
+            console.table(answers)
             answers = answers.allChoices;
+            console.log(answers)
             if (answers === 'View All Departments') {
                 viewDept();
             };
