@@ -1,41 +1,156 @@
 const inquirer = require('inquirer');
+const mysql = require('mysql2');
 
-// Initial question to determine which data user wants to see or manipulate
+// Connect to sql database
+const db = mysql.createConnection(
+    {
+      host: 'localhost',
+      // MySQL username,
+      user: 'root',
+      // MySQL password
+      password: '',
+      database: 'tracker_db'
+    },
+    console.log(`Connected to the courses_db database.`)
+  );
+
+// Inquirer questions
 const initQuestion = 
     {
         type: 'list',
-        name: 'viewAll',
+        name: 'allChoices',
         message: 'What would you like to do?',
-        choices: ['View All Departments', 'View All Roles', ' View All Employees', 'Add a Department', 'Add a Role', 'Add an Employee', 'Update an Employee Role']
+        choices: ['View All Departments', 'View All Roles', 'View All Employees', 'Add a Department', 'Add a Role', 'Add an Employee', 'Update an Employee Role']
     };
+
+const addDeptQuestions = 
+    {
+        type: 'input',
+        name: 'newDept',
+        message: 'What is the name of the department?'
+    }
+
+const addRoleQuestions = [
+    {
+        type: 'input',
+        name: 'name',
+        message: 'What is the name of the role?',
+    },
+    {
+        type: 'input',
+        name: 'salary',
+        message: 'What is the salary of the role?',
+    },
+    {
+        type: 'list',
+        name: 'dept',
+        message: 'Which department does the role belong to?',
+        //Replace choices with departments pulled from db
+        choices: ['Engineering', 'Finance', 'Legal', 'Sales']
+    }
+];
+
+const addEmpQuestions = [
+    {
+        type: 'input',
+        name: 'firstName',
+        message: "What is the employee's first name?",
+    },
+    {
+        type: 'input',
+        name: 'lastName',
+        message: "What is the employee's last name?",
+    },
+    {
+        type: 'list',
+        name: 'role',
+        message: "What is the employee's role?",
+        //Replace choices with roles pulled from db
+        choices: ['Sales Lead', 'Lawyer', 'Engineer', 'Accountant']
+    },
+    {
+        type: 'list',
+        name: 'manager',
+        message: "Who is the employee's manager?",
+        //Replace choices with managers pulled from db
+        choices: ['John Doe', 'Alex Rodriguez', 'Sam Smith', 'Mikayla Rowe']
+    }
+];
+
+const updateEmpQuestions = [
+    {
+        type: 'input',
+        name: 'name',
+        message: "Which employee's role do you want to update?",
+        //Replace choices with employees pulled from db
+        choices: ['Michael McDonald,', 'Lisa King', 'Eric Clapton', 'Sonya Erickson']
+    },
+    {
+        type: 'input',
+        name: 'updatedRole',
+        message: "Which role do you want to assign to the selected employee?",
+        //Replace choices with roles pulled from db
+        choices: ['Sales Lead', 'Lawyer', 'Engineer', 'Accountant']
+    },
+];
 
 // Functions to handle each response type
 function viewDept () {
-    console.log('Viewing all departments.')
+    //SELECT * db table
+    console.log('Viewing all departments.');
+    init();
 };
 
 function viewRole () {
-    console.log('Viewing all roles.')
+    //SELECT * db table
+    console.log('Viewing all roles.');
+    init();
 };
 
 function viewEmp () {
-    console.log('Viewing all employees.')
+    //SELECT * db table
+    console.log('Viewing all employees.');
+    init();
 };
 
 function addDept () {
-    console.log('Department added.')
+    inquirer
+        .prompt(addDeptQuestions)
+        .then((answers) => {
+            //INSERT INTO db table (column names) VALUES (values for those columns)
+        });
+    console.log('Department added.');
+    init();
 };
 
 function addRole () {
-    console.log('Role added.')
+    inquirer
+        .prompt(addRoleQuestions)
+        .then((answers) => {
+            //INSERT INTO db table (column names) VALUES (values for those columns)
+        });
+    console.log('Role added.');
+    init();
 };
 
 function addEmp () {
-    console.log('Employee added.')
+    inquirer
+        .prompt(addEmpQuestions)
+        .then((answers) => {
+            //INSERT INTO db table (column names) VALUES (values for those columns)
+        });
+    console.log('Employee added.');
+    init();
 };
 
 function updateEmp () {
-    console.log('Employee role updated.')
+    inquirer
+        .prompt(updateEmpQuestions)
+        .then((answers) => {
+            //UPDATE db table SET role = "[answer]" WHERE id = [emp id]
+        });
+    console.log('Employee role updated.');
+    init();
 };
 
 // Function to initialize Inquirer
@@ -43,33 +158,27 @@ function init() {
     inquirer
         .prompt(initQuestion)
         .then((answers) => {
+            answers = answers.allChoices;
             if (answers === 'View All Departments') {
                 viewDept();
-
             };
             if (answers === 'View All Roles') {
                 viewRole();
-
             };
             if (answers === ' View All Employees') {
                 viewEmp();
-
             };
             if (answers === 'Add a Department') {
                 addDept();
-
             };
             if (answers === 'Add a Role') {
                 addRole();
-
             };
             if (answers === 'Add an Employee') {
                 addEmp();
-
             };
             if (answers === 'Update an Employee Role') {
                 updateEmp();
-
             };
         })
         .catch((error) => {
