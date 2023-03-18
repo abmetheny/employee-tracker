@@ -20,4 +20,7 @@ JOIN department AS d ON r.department_id = d.id;
 --Add a Role query
 
 
---Update and Employee Role query
+--Add an Employee query
+
+
+--Update an Employee Role query

@@ -2,7 +2,6 @@ const inquirer = require('inquirer');
 const cTable = require('console.table');
 const db = require('./config');
 
-
 // Inquirer questions
 const initQuestion = [
     {
@@ -13,12 +12,13 @@ const initQuestion = [
     },
 ];
 
-const addDeptQuestions =
-{
-    type: 'input',
-    name: 'newDept',
-    message: 'What is the name of the department?'
-}
+const addDeptQuestions = [
+    {
+        type: 'input',
+        name: 'newDept',
+        message: 'What is the name of the department?'
+    }
+];
 
 const addRoleQuestions = [
     {
@@ -122,10 +122,14 @@ function addDept() {
     inquirer
         .prompt(addDeptQuestions)
         .then((answers) => {
-            //INSERT INTO db table (column names) VALUES (values for those columns)
+            db.query('INSERT INTO department (name) VALUES ( "' + answers.newDept + '" )', (err, result) => {
+                if (err) {
+                    console.log(err);
+                }
+                console.log('Added ' + answers.newDept + ' to the department database.');
+                init();
+            })
         });
-    console.log('Department added.');
-    init();
 };
 
 function addRole() {
@@ -133,9 +137,9 @@ function addRole() {
         .prompt(addRoleQuestions)
         .then((answers) => {
             //INSERT INTO db table (column names) VALUES (values for those columns)
+            console.log('Role added.');
+            init();
         });
-    console.log('Role added.');
-    init();
 };
 
 function addEmp() {
@@ -143,9 +147,9 @@ function addEmp() {
         .prompt(addEmpQuestions)
         .then((answers) => {
             //INSERT INTO db table (column names) VALUES (values for those columns)
+            console.log('Employee added.');
+            init();
         });
-    console.log('Employee added.');
-    init();
 };
 
 function updateEmp() {
@@ -153,9 +157,9 @@ function updateEmp() {
         .prompt(updateEmpQuestions)
         .then((answers) => {
             //UPDATE db table SET role = "[answer]" WHERE id = [emp id]
+            console.log('Employee role updated.');
+            init();
         });
-    console.log('Employee role updated.');
-    init();
 };
 
 // Function to initialize Inquirer
@@ -164,7 +168,6 @@ function init() {
         .prompt(initQuestion)
         .then((answers) => {
             answers = answers.allChoices;
-            console.log(answers)
             if (answers === 'View All Departments') {
                 viewDept();
             };
