@@ -1,3 +1,5 @@
+USE tracker_db;
+
 --View All Departments query
 SELECT * 
 FROM department;

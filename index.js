@@ -2,6 +2,44 @@ const inquirer = require('inquirer');
 const cTable = require('console.table');
 const db = require('./config');
 
+let deptArray = [];
+let roleArray = [];
+let empArray = [];
+
+// Queries to populate Inquirer choices
+// Returns all departments currently in the db
+db.query('SELECT name FROM department', (err, result) => {
+    if (err) {
+        console.log(err);
+    }
+    deptArray.filter(dept => {return dept == ""});
+    result.forEach((dept) => {
+        deptArray.push(dept.name);
+    });
+});
+
+// Returns all roles currently in the db
+db.query('SELECT title FROM role', (err, result) => {
+    if (err) {
+        console.log(err);
+    }
+    roleArray.filter(role => {return role == ""});
+    result.forEach((role) => {
+        roleArray.push(role.title);
+    });
+});
+
+// Returns all concat employees currently in the db
+db.query('SELECT CONCAT (first_name, " ", last_name) AS name FROM employee', (err, result) => {
+    if (err) {
+        console.log(err);
+    }
+    empArray.filter(emp => {return emp == ""});
+    result.forEach((emp) => {
+        empArray.push(emp.name);
+    });
+});
+
 // Inquirer questions
 const initQuestion = [
     {
@@ -35,8 +73,7 @@ const addRoleQuestions = [
         type: 'list',
         name: 'dept',
         message: 'Which department does the role belong to?',
-        //Replace choices with departments pulled from db
-        choices: ['Engineering', 'Finance', 'Legal', 'Sales']
+        choices: deptArray
     }
 ];
 
@@ -55,15 +92,13 @@ const addEmpQuestions = [
         type: 'list',
         name: 'role',
         message: "What is the employee's role?",
-        //Replace choices with roles pulled from db
-        choices: ['Sales Lead', 'Lawyer', 'Engineer', 'Accountant']
+        choices: roleArray
     },
     {
         type: 'list',
         name: 'manager',
         message: "Who is the employee's manager?",
-        //Replace choices with managers pulled from db
-        choices: ['John Doe', 'Alex Rodriguez', 'Sam Smith', 'Mikayla Rowe']
+        choices: empArray
     }
 ];
 
@@ -72,15 +107,13 @@ const updateEmpQuestions = [
         type: 'input',
         name: 'name',
         message: "Which employee's role do you want to update?",
-        //Replace choices with employees pulled from db
-        choices: ['Michael McDonald,', 'Lisa King', 'Eric Clapton', 'Sonya Erickson']
+        choices: empArray
     },
     {
         type: 'input',
         name: 'updatedRole',
         message: "Which role do you want to assign to the selected employee?",
-        //Replace choices with roles pulled from db
-        choices: ['Sales Lead', 'Lawyer', 'Engineer', 'Accountant']
+        choices: roleArray
     },
 ];
 
