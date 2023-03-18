@@ -155,13 +155,14 @@ function addDept() {
     inquirer
         .prompt(addDeptQuestions)
         .then((answers) => {
+            // Insert user input value into department table
             db.query('INSERT INTO department (name) VALUES ( "' + answers.newDept + '" )', (err, result) => {
                 if (err) {
                     console.log(err);
                 }
                 console.log('Added ' + answers.newDept + ' to the department database.');
                 init();
-            })
+            });
         });
 };
 
@@ -169,9 +170,25 @@ function addRole() {
     inquirer
         .prompt(addRoleQuestions)
         .then((answers) => {
-            //INSERT INTO db table (column names) VALUES (values for those columns)
-            console.log('Role added.');
-            init();
+            // Get department ID
+            let deptID;
+            db.query('SELECT (id) FROM department WHERE name = "' + answers.dept + '"', (err, result) => {
+                if (err) {
+                    console.log(err);
+                }
+                result.forEach((dept) => {
+                    deptID = dept.id;
+                });
+                console.log(deptID);
+                // Insert user input values into role table
+                db.query('INSERT INTO role (title, salary, department_id) VALUES ( "' + answers.name + '", ' + answers.salary + ', ' + deptID + ')', (err, result) => {
+                    if (err) {
+                        console.log(err);
+                    }
+                    console.log('Added ' + answers.name + ' to the roles database.');
+                    init();
+                });
+            });
         });
 };
 
