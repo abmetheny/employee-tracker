@@ -106,13 +106,13 @@ const addEmpQuestions = [
 
 const updateEmpQuestions = [
     {
-        type: 'input',
+        type: 'list',
         name: 'name',
         message: "Which employee's role do you want to update?",
         choices: empArray
     },
     {
-        type: 'input',
+        type: 'list',
         name: 'updatedRole',
         message: "Which role do you want to assign to the selected employee?",
         choices: roleArray
@@ -219,8 +219,7 @@ function addEmp() {
                 }
                 console.log(`Added ${answers.firstName} ${answers.lastName} to the employee database.`);
                 init();
-            });
-            
+            });  
         });
 };
 
@@ -228,7 +227,16 @@ function updateEmp() {
     inquirer
         .prompt(updateEmpQuestions)
         .then((answers) => {
-            //UPDATE db table SET role = "[answer]" WHERE id = [emp id]
+            // Update employee table with user input values
+            db.query(`UPDATE employee e
+            SET role_id = (SELECT id FROM role WHERE title = '${answers.updatedRole}')
+            WHERE CONCAT (e.first_name, ' ', e.last_name) = '${answers.name}';`, (err, result) => {
+                if (err) {
+                    console.log(err);
+                }
+                console.log(`Updated ${answers.name} in the employee database.`);
+                init();
+            });
             console.log('Employee role updated.');
             init();
         });
