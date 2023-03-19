@@ -7,38 +7,40 @@ let roleArray = [];
 let empArray = [];
 
 // Queries to populate Inquirer choices
-// Returns all departments currently in the db
-db.query('SELECT name FROM department', (err, result) => {
-    if (err) {
-        console.log(err);
-    }
-    deptArray.filter(dept => {return dept == ""});
-    result.forEach((dept) => {
-        deptArray.push(dept.name);
+function getCurrentTables() {
+    // Returns all departments currently in the db
+    db.query('SELECT name FROM department', (err, result) => {
+        if (err) {
+            console.log(err);
+        }
+        deptArray.filter(dept => {return dept == ""});
+        result.forEach((dept) => {
+            deptArray.push(dept.name);
+        });
     });
-});
-
-// Returns all roles currently in the db
-db.query('SELECT title FROM role', (err, result) => {
-    if (err) {
-        console.log(err);
-    }
-    roleArray.filter(role => {return role == ""});
-    result.forEach((role) => {
-        roleArray.push(role.title);
+    
+    // Returns all roles currently in the db
+    db.query('SELECT title FROM role', (err, result) => {
+        if (err) {
+            console.log(err);
+        }
+        roleArray.filter(role => {return role == ""});
+        result.forEach((role) => {
+            roleArray.push(role.title);
+        });
     });
-});
-
-// Returns all concat employees currently in the db
-db.query('SELECT CONCAT (first_name, " ", last_name) AS name FROM employee', (err, result) => {
-    if (err) {
-        console.log(err);
-    }
-    empArray.filter(emp => {return emp == ""});
-    result.forEach((emp) => {
-        empArray.push(emp.name);
+    
+    // Returns all concat employees currently in the db
+    db.query('SELECT CONCAT (first_name, " ", last_name) AS name FROM employee', (err, result) => {
+        if (err) {
+            console.log(err);
+        }
+        empArray.filter(emp => {return emp == ""});
+        result.forEach((emp) => {
+            empArray.push(emp.name);
+        });
     });
-});
+};
 
 // Inquirer questions
 const initQuestion = [
@@ -119,7 +121,9 @@ const updateEmpQuestions = [
 
 // Functions to handle each response type
 function viewDept() {
-    db.query('SELECT * FROM department', (err, result) => {
+    db.query(`
+    SELECT * 
+    FROM department`, (err, result) => {
         if (err) {
             console.log(err);
         }
@@ -130,7 +134,11 @@ function viewDept() {
 };
 
 function viewRole() {
-    db.query('SELECT r.id, r.title, d.name, r.salary FROM role AS r JOIN department AS d ON r.department_id = d.id;', (err, result) => {
+    db.query(`
+    SELECT r.id, r.title, d.name, r.salary 
+    FROM role AS r 
+    LEFT JOIN department AS d 
+    ON r.department_id = d.id;`, (err, result) => {
         if (err) {
             console.log(err);
         }
@@ -141,7 +149,15 @@ function viewRole() {
 };
 
 function viewEmp() {
-    db.query('SELECT e.id, e.first_name, e.last_name, r.title, d.name AS department, r.salary, CONCAT (m.first_name, " ", m.last_name) AS manager FROM employee AS e LEFT JOIN employee AS m ON e.manager_id = m.id JOIN role AS r ON e.role_id = r.id JOIN department AS d ON r.department_id = d.id;', (err, result) => {
+    db.query(`
+    SELECT e.id, e.first_name, e.last_name, r.title, d.name AS department, r.salary, CONCAT (m.first_name, " ", m.last_name) AS manager 
+    FROM employee AS e 
+    LEFT JOIN employee AS m 
+    ON e.manager_id = m.id 
+    JOIN role AS r 
+    ON e.role_id = r.id 
+    JOIN department AS d 
+    ON r.department_id = d.id;`, (err, result) => {
         if (err) {
             console.log(err);
         };
@@ -156,11 +172,13 @@ function addDept() {
         .prompt(addDeptQuestions)
         .then((answers) => {
             // Insert user input value into department table
-            db.query('INSERT INTO department (name) VALUES ( "' + answers.newDept + '" )', (err, result) => {
+            db.query(`
+            INSERT INTO department (name) 
+            VALUES ( "${answers.newDept}" )`, (err, result) => {
                 if (err) {
                     console.log(err);
                 }
-                console.log('Added ' + answers.newDept + ' to the department database.');
+                console.log(`Added ${answers.newDept} department to the database.`);
                 init();
             });
         });
@@ -170,25 +188,18 @@ function addRole() {
     inquirer
         .prompt(addRoleQuestions)
         .then((answers) => {
-            // Get department ID
-            let deptID;
-            db.query('SELECT (id) FROM department WHERE name = "' + answers.dept + '"', (err, result) => {
+            // Insert user input values into role table
+            db.query(`
+            INSERT INTO role (title, salary, department_id)
+            SELECT "${answers.name}", ${answers.salary}, d.id
+            FROM department d
+            WHERE d.name = "${answers.dept}"`, (err, result) => {
                 if (err) {
                     console.log(err);
                 }
-                result.forEach((dept) => {
-                    deptID = dept.id;
-                });
-                console.log(deptID);
-                // Insert user input values into role table
-                db.query('INSERT INTO role (title, salary, department_id) VALUES ( "' + answers.name + '", ' + answers.salary + ', ' + deptID + ')', (err, result) => {
-                    if (err) {
-                        console.log(err);
-                    }
-                    console.log('Added ' + answers.name + ' to the roles database.');
-                    init();
-                });
-            });
+                console.log(`Added ${answers.name} role to the database.`);
+                init();
+            })
         });
 };
 
@@ -196,9 +207,20 @@ function addEmp() {
     inquirer
         .prompt(addEmpQuestions)
         .then((answers) => {
-            //INSERT INTO db table (column names) VALUES (values for those columns)
-            console.log('Employee added.');
-            init();
+            // Insert user input values into employee table
+            db.query(`
+            INSERT INTO employee (first_name, last_name, role_id, manager_id)
+            SELECT "${answers.firstName}", "${answers.lastName}", r.id, e.id
+            FROM role r, employee e
+            WHERE r.title = "${answers.role}"
+            AND CONCAT (e.first_name, " ", e.last_name) = "${answers.manager}"`, (err, result) => {
+                if (err) {
+                    console.log(err);
+                }
+                console.log(`Added ${answers.firstName} ${answers.lastName} to the employee database.`);
+                init();
+            });
+            
         });
 };
 
@@ -214,6 +236,7 @@ function updateEmp() {
 
 // Function to initialize Inquirer
 function init() {
+    getCurrentTables();
     inquirer
         .prompt(initQuestion)
         .then((answers) => {
