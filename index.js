@@ -5,6 +5,7 @@ const db = require('./config');
 let deptArray = [];
 let roleArray = [];
 let empArray = [];
+let noManager = "None";
 
 // Queries to populate Inquirer choices
 function getCurrentTables() {
@@ -36,6 +37,7 @@ function getCurrentTables() {
             console.log(err);
         }
         empArray.filter(emp => {return emp == ""});
+        empArray.push(noManager);
         result.forEach((emp) => {
             empArray.push(emp.name);
         });
@@ -135,7 +137,7 @@ function viewDept() {
 
 function viewRole() {
     db.query(`
-    SELECT r.id, r.title, d.name, r.salary 
+    SELECT r.id, r.title, d.name AS department, r.salary 
     FROM role AS r 
     LEFT JOIN department AS d 
     ON r.department_id = d.id;`, (err, result) => {
@@ -208,7 +210,20 @@ function addEmp() {
         .prompt(addEmpQuestions)
         .then((answers) => {
             // Insert user input values into employee table
-            db.query(`
+            if (answers.manager == "None") {
+                db.query(`
+            INSERT INTO employee (first_name, last_name, role_id)
+            SELECT "${answers.firstName}", "${answers.lastName}", r.id
+            FROM role r
+            WHERE r.title = "${answers.role}"`, (err, result) => {
+                if (err) {
+                    console.log(err);
+                }
+                console.log(`Added ${answers.firstName} ${answers.lastName} to the employee database.`);
+                init();
+            });  
+            }
+            else {db.query(`
             INSERT INTO employee (first_name, last_name, role_id, manager_id)
             SELECT "${answers.firstName}", "${answers.lastName}", r.id, e.id
             FROM role r, employee e
@@ -219,7 +234,8 @@ function addEmp() {
                 }
                 console.log(`Added ${answers.firstName} ${answers.lastName} to the employee database.`);
                 init();
-            });  
+            });
+            }  
         });
 };
 
