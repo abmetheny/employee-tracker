@@ -1,8 +1,6 @@
 const inquirer = require('inquirer');
 const cTable = require('console.table');
 const db = require('./config');
-const questions = require('./assets/js/inquirerQuestions');
-const functions = require('./assets/js/sqlFunctions');
 
 let deptArray = [];
 let roleArray = [];
@@ -46,7 +44,7 @@ function getCurrentTables() {
     });
 };
 
-// Create temporary tables for updating employee managers
+// Create and delete temporary table using employee table names and ids
 function createTempMgrTable() {
     db.query(`CREATE TEMPORARY TABLE manager 
     SELECT e.id AS mgr_id, e.first_name AS mgr_fn, e.last_name AS mgr_ln 
@@ -55,7 +53,7 @@ function createTempMgrTable() {
             console.log(err);
         }
     })
-}
+};
 
 function deleteTempMgrTable(){
     db.query(`DROP TEMPORARY TABLE manager;`, (err, result) => {
@@ -63,7 +61,29 @@ function deleteTempMgrTable(){
             console.log(err);
         }
     })
-}
+};
+
+// Create and delete temporary table combining employee, role, and department tables
+
+function createTempBudgetTable() {
+    db.query(`CREATE TEMPORARY TABLE budget
+    SELECT e.role_id, r.id AS role_table_id, r.salary, r.department_id AS role_table_department_id, d.id AS department_table_id, d.name AS department_table_name
+    FROM employee e
+    LEFT JOIN role r ON e.role_id = r.id
+    JOIN department d ON r.department_id = d.id;`, (err, result) => {
+        if (err) {
+            console.log(err);
+        }
+    })
+};
+
+function deleteTempBudgetTable(){
+    db.query(`DROP TEMPORARY TABLE budget;`, (err, result) => {
+        if (err) {
+            console.log(err);
+        }
+    })
+};
 
 // Inquirer questions
 const initQuestion = [
@@ -364,27 +384,30 @@ function updateEmpMgr() {
 };
 
 function viewEmpMgr() {
-    db.query(`
-    SELECT * 
-    FROM department`, (err, result) => {
+    db.query(`SELECT CONCAT (e.first_name, ' ', e.last_name) AS employee, CONCAT (m.first_name, ' ', m.last_name) AS manager
+    FROM employee e
+    LEFT JOIN employee m ON e.manager_id = m.id
+    ORDER BY m.first_name;`, (err, result) => {
         if (err) {
             console.log(err);
         }
         console.table(result);
-        console.log('Viewing all departments.');
+        console.log('Viewing all employees by manager.');
         init();
     });
 };
 
 function viewEmpDept() {
-    db.query(`
-    SELECT * 
-    FROM department`, (err, result) => {
+    db.query(`SELECT CONCAT (e.first_name, ' ', e.last_name) AS employee, d.name AS department
+    FROM employee e
+    LEFT JOIN role r ON e.role_id = r.id
+    JOIN department d ON r.department_id = d.id
+    ORDER BY d.name;`, (err, result) => {
         if (err) {
             console.log(err);
         }
         console.table(result);
-        console.log('Viewing all departments.');
+        console.log('Viewing all employees by department.');
         init();
     });
 };
@@ -413,7 +436,6 @@ function deleteRole() {
                 if (err) {
                     console.log(err);
                 }
-                console.table(result);
                 console.log(`${answers.role} deleted from roles list.`);
                 init();
             });      
@@ -429,7 +451,6 @@ function deleteEmp() {
                 if (err) {
                     console.log(err);
                 }
-                console.table(result);
                 console.log(`${answers.name} removed from employees list.`);
                 init();
             });             
@@ -437,20 +458,29 @@ function deleteEmp() {
 };
 
 function viewBudget() {
-    db.query(`
-    SELECT * 
-    FROM department`, (err, result) => {
-        if (err) {
-            console.log(err);
-        }
-        console.table(result);
-        console.log('Viewing all departments.');
-        init();
-    });
+    inquirer
+        .prompt(viewBudgetQuestions)
+        .then((answers) => {
+            createTempBudgetTable();
+            // View sum of salaries for all employees within user selected department
+            db.query(`SELECT SUM(salary) AS total_dept_budget
+            FROM budget
+            WHERE department_table_name = '${answers.dept}';`, (err, result) => {
+                if (err) {
+                    console.log(err);
+                }
+                deleteTempBudgetTable();
+                console.table(result);
+                console.log(`Viewing total utilized budget for ${answers.dept} department.`);
+                console.log(deptArray);
+                init();
+            });
+        });
 };
 
 // Function to initialize Inquirer
-const init = async () => {
+init = async () => {
+    // Awaits for arrays supplying Inquirer choices to be updated before initializing prompts
     await getCurrentTables();
     
     inquirer
