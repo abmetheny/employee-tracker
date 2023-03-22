@@ -44,13 +44,32 @@ function getCurrentTables() {
     });
 };
 
+// Create temporary tables for updating employee managers
+function createTempMgrTable() {
+    db.query(`CREATE TEMPORARY TABLE manager 
+    SELECT e.id AS mgr_id, e.first_name AS mgr_fn, e.last_name AS mgr_ln 
+    FROM employee e;`, (err, result) => {
+        if (err) {
+            console.log(err);
+        }
+    })
+}
+
+function deleteTempMgrTable(){
+    db.query(`DROP TEMPORARY TABLE manager;`, (err, result) => {
+        if (err) {
+            console.log(err);
+        }
+    })
+}
+
 // Inquirer questions
 const initQuestion = [
     {
         type: 'list',
         name: 'allChoices',
         message: 'What would you like to do?',
-        choices: ['View All Departments', 'View All Roles', 'View All Employees', 'Add a Department', 'Add a Role', 'Add an Employee', 'Update an Employee Role']
+        choices: ['View All Departments', 'View All Roles', 'View All Employees', 'Add a Department', 'Add a Role', 'Add an Employee', 'Update an Employee Role', 'Update an Employee Manager']
     },
 ];
 
@@ -118,6 +137,21 @@ const updateEmpQuestions = [
         name: 'updatedRole',
         message: "Which role do you want to assign to the selected employee?",
         choices: roleArray
+    },
+];
+
+const updateEmpMgrQuestions = [
+    {
+        type: 'list',
+        name: 'name',
+        message: "Which employee's manager do you want to update?",
+        choices: empArray
+    },
+    {
+        type: 'list',
+        name: 'updatedMgr',
+        message: "Which manager do you want to assign to the selected employee?",
+        choices: empArray
     },
 ];
 
@@ -250,11 +284,26 @@ function updateEmp() {
                 if (err) {
                     console.log(err);
                 }
-                console.log(`Updated ${answers.name} in the employee database.`);
+                console.log(`Employee role updated.`);
                 init();
             });
-            console.log('Employee role updated.');
-            init();
+        });
+};
+
+function updateEmpMgr() {
+    inquirer
+        .prompt(updateEmpMgrQuestions)
+        .then((answers) => {
+            createTempMgrTable();
+            // Update employee table with user input values
+            db.query(`UPDATE employee e JOIN manager m ON CONCAT (m.mgr_fn, ' ', m.mgr_ln) = '${answers.updatedMgr}' SET e.manager_id = m.mgr_id WHERE CONCAT (e.first_name, ' ', e.last_name) = '${answers.name}';`, (err, result) => {
+                if (err) {
+                    console.log(err);
+                }
+                deleteTempMgrTable();
+                console.log(`Employee manager updated.`);
+                init();
+            });
         });
 };
 
@@ -286,6 +335,9 @@ function init() {
             if (answers === 'Update an Employee Role') {
                 updateEmp();
             };
+            if (answers === 'Update an Employee Manager') {
+                updateEmpMgr();
+            }
         })
         .catch((error) => {
             if (error.isTtyError) {
