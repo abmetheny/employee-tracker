@@ -1,6 +1,8 @@
 const inquirer = require('inquirer');
 const cTable = require('console.table');
 const db = require('./config');
+const questions = require('./assets/js/inquirerQuestions');
+const functions = require('./assets/js/sqlFunctions');
 
 let deptArray = [];
 let roleArray = [];
@@ -69,7 +71,7 @@ const initQuestion = [
         type: 'list',
         name: 'allChoices',
         message: 'What would you like to do?',
-        choices: ['View All Departments', 'View All Roles', 'View All Employees', 'Add a Department', 'Add a Role', 'Add an Employee', 'Update an Employee Role', 'Update an Employee Manager']
+        choices: ['View All Departments', 'View All Roles', 'View All Employees', 'Add a Department', 'Add a Role', 'Add an Employee', 'Update an Employee Role', 'Update an Employee Manager', 'View Employees by Manager', 'View Employees by Department', 'Delete Departments', 'Delete Roles', 'Delete Employees', 'View Total Utilized Budget of a Department']
     },
 ];
 
@@ -154,6 +156,60 @@ const updateEmpMgrQuestions = [
         choices: empArray
     },
 ];
+
+const viewEmpMgrQuestions = [
+    {
+        type: 'list',
+        name: 'mgrName',
+        message: "Which manager's employees do you want to view?",
+        choices: ['Jim', 'Alex'] //mgrArray
+    },
+];
+
+const viewEmpDeptQuestions = [
+    {
+        type: 'list',
+        name: 'dept',
+        message: "Which department's employees do you want to view?",
+        choices: deptArray
+    },
+];
+
+const deleteDeptQuestions = [
+    {
+        type: 'list',
+        name: 'dept',
+        message: "Which department do you want to delete?",
+        choices: deptArray
+    },
+];
+
+const deleteRoleQuestions = [
+    {
+        type: 'list',
+        name: 'role',
+        message: "Which role do you want to delete?",
+        choices: roleArray
+    },
+];
+
+const deleteEmpQuestions = [
+    {
+        type: 'list',
+        name: 'name',
+        message: "Which employee do you want to delete?",
+        choices: empArray
+    },
+];
+
+const viewBudgetQuestions = [
+    {
+        type: 'list',
+        name: 'dept',
+        message: "Which department's budget do you want to view?",
+        choices: deptArray
+    },
+]
 
 // Functions to handle each response type
 function viewDept() {
@@ -307,9 +363,96 @@ function updateEmpMgr() {
         });
 };
 
+function viewEmpMgr() {
+    db.query(`
+    SELECT * 
+    FROM department`, (err, result) => {
+        if (err) {
+            console.log(err);
+        }
+        console.table(result);
+        console.log('Viewing all departments.');
+        init();
+    });
+};
+
+function viewEmpDept() {
+    db.query(`
+    SELECT * 
+    FROM department`, (err, result) => {
+        if (err) {
+            console.log(err);
+        }
+        console.table(result);
+        console.log('Viewing all departments.');
+        init();
+    });
+};
+
+function deleteDept() {
+    inquirer
+        .prompt(deleteDeptQuestions)
+        .then((answers) => {
+            // Delete user selected department from department table
+            db.query(`DELETE FROM department WHERE name = '${answers.dept}';`, (err, result) => {
+                if (err) {
+                    console.log(err);
+                }
+                console.log(`${answers.dept} deleted from departments list.`);
+                init();
+            });          
+        });
+};
+
+function deleteRole() {
+    inquirer
+        .prompt(deleteRoleQuestions)
+        .then((answers) => {
+            // Delete user selected role from role table
+            db.query(`DELETE FROM role WHERE title = '${answers.role}';`, (err, result) => {
+                if (err) {
+                    console.log(err);
+                }
+                console.table(result);
+                console.log(`${answers.role} deleted from roles list.`);
+                init();
+            });      
+        });
+};
+
+function deleteEmp() {
+    inquirer
+        .prompt(deleteEmpQuestions)
+        .then((answers) => {
+            // Delete user selected employee from employee table
+            db.query(`DELETE FROM employee WHERE CONCAT (first_name, ' ', last_name) = '${answers.name}';`, (err, result) => {
+                if (err) {
+                    console.log(err);
+                }
+                console.table(result);
+                console.log(`${answers.name} removed from employees list.`);
+                init();
+            });             
+        });  
+};
+
+function viewBudget() {
+    db.query(`
+    SELECT * 
+    FROM department`, (err, result) => {
+        if (err) {
+            console.log(err);
+        }
+        console.table(result);
+        console.log('Viewing all departments.');
+        init();
+    });
+};
+
 // Function to initialize Inquirer
-function init() {
-    getCurrentTables();
+const init = async () => {
+    await getCurrentTables();
+    
     inquirer
         .prompt(initQuestion)
         .then((answers) => {
@@ -337,6 +480,24 @@ function init() {
             };
             if (answers === 'Update an Employee Manager') {
                 updateEmpMgr();
+            };
+            if (answers === 'View Employees by Manager') {
+                viewEmpMgr();
+            };
+            if (answers === 'View Employees by Department') {
+                viewEmpDept();
+            };
+            if (answers === 'Delete Departments') {
+                deleteDept();
+            };
+            if (answers === 'Delete Roles') {
+                deleteRole();
+            };
+            if (answers === 'Delete Employees') {
+                deleteEmp();
+            };
+            if (answers === 'View Total Utilized Budget of a Department') {
+                viewBudget();
             }
         })
         .catch((error) => {
