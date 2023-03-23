@@ -1,3 +1,6 @@
+-- Active: 1679070500573@@127.0.0.1@3306@tracker_db
+DROP DATABASE IF EXISTS tracker_db;
+
 CREATE DATABASE tracker_db;
 
 USE tracker_db;

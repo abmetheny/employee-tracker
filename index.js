@@ -2,12 +2,13 @@ const inquirer = require('inquirer');
 const cTable = require('console.table');
 const db = require('./config');
 
+// Variables to populate Inquirer choices
 let deptArray = [];
 let roleArray = [];
 let empArray = [];
 let noManager = "None";
 
-// Queries to populate Inquirer choices
+// Queries to populate Inquirer choice variables
 function getCurrentTables() {
     // Returns all departments currently in the db
     db.query('SELECT name FROM department', (err, result) => {
@@ -64,7 +65,6 @@ function deleteTempMgrTable(){
 };
 
 // Create and delete temporary table combining employee, role, and department tables
-
 function createTempBudgetTable() {
     db.query(`CREATE TEMPORARY TABLE budget
     SELECT e.role_id, r.id AS role_table_id, r.salary, r.department_id AS role_table_department_id, d.id AS department_table_id, d.name AS department_table_name
@@ -85,13 +85,13 @@ function deleteTempBudgetTable(){
     })
 };
 
-// Inquirer questions
+// Inquirer question arrays
 const initQuestion = [
     {
         type: 'list',
         name: 'allChoices',
         message: 'What would you like to do?',
-        choices: ['View All Departments', 'View All Roles', 'View All Employees', 'Add a Department', 'Add a Role', 'Add an Employee', 'Update an Employee Role', 'Update an Employee Manager', 'View Employees by Manager', 'View Employees by Department', 'Delete Departments', 'Delete Roles', 'Delete Employees', 'View Total Utilized Budget of a Department']
+        choices: ['View All Departments', 'View Total Utilized Budget of a Department', 'Add a Department', 'Delete a Department', 'View All Roles', 'Add a Role', 'Delete a Role', 'View All Employees', 'View Employees by Manager', 'View Employees by Department', 'Add an Employee', 'Update an Employee Role', 'Update an Employee Manager', 'Delete an Employee']
     },
 ];
 
@@ -174,24 +174,6 @@ const updateEmpMgrQuestions = [
         name: 'updatedMgr',
         message: "Which manager do you want to assign to the selected employee?",
         choices: empArray
-    },
-];
-
-const viewEmpMgrQuestions = [
-    {
-        type: 'list',
-        name: 'mgrName',
-        message: "Which manager's employees do you want to view?",
-        choices: ['Jim', 'Alex'] //mgrArray
-    },
-];
-
-const viewEmpDeptQuestions = [
-    {
-        type: 'list',
-        name: 'dept',
-        message: "Which department's employees do you want to view?",
-        choices: deptArray
     },
 ];
 
@@ -472,7 +454,6 @@ function viewBudget() {
                 deleteTempBudgetTable();
                 console.table(result);
                 console.log(`Viewing total utilized budget for ${answers.dept} department.`);
-                console.log(deptArray);
                 init();
             });
         });
@@ -517,13 +498,13 @@ init = async () => {
             if (answers === 'View Employees by Department') {
                 viewEmpDept();
             };
-            if (answers === 'Delete Departments') {
+            if (answers === 'Delete a Department') {
                 deleteDept();
             };
-            if (answers === 'Delete Roles') {
+            if (answers === 'Delete a Role') {
                 deleteRole();
             };
-            if (answers === 'Delete Employees') {
+            if (answers === 'Delete an Employee') {
                 deleteEmp();
             };
             if (answers === 'View Total Utilized Budget of a Department') {
